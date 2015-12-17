@@ -36,12 +36,38 @@ class ViewController: UIViewController {
     }
     
     func setupCard(color : UIColor, index : Int) -> UIView {
-        let card = UIView(frame: CGRect(origin: CGPoint(x: 0, y: 100 * index), size: CGSize(width:  view.bounds.size.width, height:  view.bounds.size.height - 120)))
+        let card = UIView(frame: CGRect(origin: CGPoint(x: 0, y: 100 * index), size: CGSize(width:  view.bounds.size.width, height:  630)))
         card.backgroundColor = color
         card.layer.cornerRadius = 10
         card.layer.borderColor = UIColor.grayColor().CGColor
         card.layer.borderWidth = 1
+        card.tag == index
+        card.addGestureRecognizer(UITapGestureRecognizer(target: self, action: Selector("tapCard:")))
         return card
+    }
+    
+    func tapCard(gesture : UITapGestureRecognizer) {
+        let index = indexOfView(gesture.view!)
+        UIView.animateWithDuration(0.3) { () -> Void in
+            for i in 0..<self.scrollView.subviews.count {
+                let card = self.scrollView.subviews[i]
+                if i == index {
+                    card.frame = CGRectMake(0, self.scrollView.contentOffset.y, self.view.frame.width, 630)
+                }else {
+                    card.frame = CGRectMake(CGFloat(i) * 2, self.scrollView.contentOffset.y + self.scrollView.frame.height - CGFloat(i) * 2, self.scrollView.frame.width, 630)
+                }
+            }
+        }
+    }
+    
+    func indexOfView(card : UIView) -> Int {
+        for i in 0..<self.scrollView.subviews.count {
+            let c = self.scrollView.subviews[i]
+            if card == c {
+                return i
+            }
+        }
+        return 0
     }
 
     override func didReceiveMemoryWarning() {

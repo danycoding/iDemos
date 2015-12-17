@@ -7,18 +7,20 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		2719A7378C190BC2B8A370BB /* Pods.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 12AA5A6C5CAB357BD3FD4797 /* Pods.framework */; };
 		7C2F870A1C0D493D008C2666 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C2F87091C0D493D008C2666 /* AppDelegate.swift */; };
 		7C2F870C1C0D493D008C2666 /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C2F870B1C0D493D008C2666 /* ViewController.swift */; };
 		7C2F870F1C0D493D008C2666 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 7C2F870D1C0D493D008C2666 /* Main.storyboard */; };
 		7C2F87111C0D493D008C2666 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 7C2F87101C0D493D008C2666 /* Assets.xcassets */; };
 		7C2F87141C0D493D008C2666 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 7C2F87121C0D493D008C2666 /* LaunchScreen.storyboard */; };
+		7CC93BFD1C1FBEC2001CA7BC /* DB.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7CC93BFC1C1FBEC2001CA7BC /* DB.swift */; };
+		7CC93C011C1FC05A001CA7BC /* Tool.m in Sources */ = {isa = PBXBuildFile; fileRef = 7CC93C001C1FC05A001CA7BC /* Tool.m */; };
+		A042C015790F774F35426AF2 /* libPods.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 514C0A05AEC1576F3665BBC6 /* libPods.a */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		12AA5A6C5CAB357BD3FD4797 /* Pods.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		24C754D11DA9472A3ECCCD5C /* Pods.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = Pods.release.xcconfig; path = "Pods/Target Support Files/Pods/Pods.release.xcconfig"; sourceTree = "<group>"; };
 		2D0A2BA08E3B407FC9180C8B /* Pods.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = Pods.debug.xcconfig; path = "Pods/Target Support Files/Pods/Pods.debug.xcconfig"; sourceTree = "<group>"; };
+		514C0A05AEC1576F3665BBC6 /* libPods.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libPods.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		7C2F87061C0D493D008C2666 /* Demo.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Demo.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		7C2F87091C0D493D008C2666 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		7C2F870B1C0D493D008C2666 /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
@@ -26,6 +28,10 @@
 		7C2F87101C0D493D008C2666 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		7C2F87131C0D493D008C2666 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		7C2F87151C0D493D008C2666 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		7CC93BFC1C1FBEC2001CA7BC /* DB.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DB.swift; sourceTree = "<group>"; };
+		7CC93BFE1C1FC059001CA7BC /* Demo-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "Demo-Bridging-Header.h"; sourceTree = "<group>"; };
+		7CC93BFF1C1FC05A001CA7BC /* Tool.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Tool.h; sourceTree = "<group>"; };
+		7CC93C001C1FC05A001CA7BC /* Tool.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Tool.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -33,7 +39,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				2719A7378C190BC2B8A370BB /* Pods.framework in Frameworks */,
+				A042C015790F774F35426AF2 /* libPods.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -76,6 +82,10 @@
 				7C2F87101C0D493D008C2666 /* Assets.xcassets */,
 				7C2F87121C0D493D008C2666 /* LaunchScreen.storyboard */,
 				7C2F87151C0D493D008C2666 /* Info.plist */,
+				7CC93BFC1C1FBEC2001CA7BC /* DB.swift */,
+				7CC93BFF1C1FC05A001CA7BC /* Tool.h */,
+				7CC93C001C1FC05A001CA7BC /* Tool.m */,
+				7CC93BFE1C1FC059001CA7BC /* Demo-Bridging-Header.h */,
 			);
 			path = Demo;
 			sourceTree = "<group>";
@@ -83,7 +93,7 @@
 		9E3A82FEBB8CD0881FFDF4C9 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
-				12AA5A6C5CAB357BD3FD4797 /* Pods.framework */,
+				514C0A05AEC1576F3665BBC6 /* libPods.a */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -117,7 +127,7 @@
 		7C2F86FE1C0D493D008C2666 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastSwiftUpdateCheck = 0710;
+				LastSwiftUpdateCheck = 0720;
 				LastUpgradeCheck = 0710;
 				ORGANIZATIONNAME = DanyChen;
 				TargetAttributes = {
@@ -212,6 +222,8 @@
 			files = (
 				7C2F870C1C0D493D008C2666 /* ViewController.swift in Sources */,
 				7C2F870A1C0D493D008C2666 /* AppDelegate.swift in Sources */,
+				7CC93BFD1C1FBEC2001CA7BC /* DB.swift in Sources */,
+				7CC93C011C1FC05A001CA7BC /* Tool.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -325,10 +337,13 @@
 			baseConfigurationReference = 2D0A2BA08E3B407FC9180C8B /* Pods.debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CLANG_ENABLE_MODULES = YES;
 				INFOPLIST_FILE = Demo/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = dy.Demo;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_OBJC_BRIDGING_HEADER = "Demo/Demo-Bridging-Header.h";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 			};
 			name = Debug;
 		};
@@ -337,10 +352,12 @@
 			baseConfigurationReference = 24C754D11DA9472A3ECCCD5C /* Pods.release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CLANG_ENABLE_MODULES = YES;
 				INFOPLIST_FILE = Demo/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = dy.Demo;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_OBJC_BRIDGING_HEADER = "Demo/Demo-Bridging-Header.h";
 			};
 			name = Release;
 		};
