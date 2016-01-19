@@ -1,211 +1,210 @@
 //
-//  DB.swift
-//  Demo
+//  DatabaseUtil.swift
+//  DejaFashion
 //
-//  Created by DanyChen on 15/12/15.
-//  Copyright © 2015 DanyChen. All rights reserved.
+//  Created by DanyChen on 21/12/15.
+//  Copyright © 2015 Mozat. All rights reserved.
 //
 
 import UIKit
 
-enum Column : String{
-    
-    case status, id, type
-    
-    case userId, userName, userAvatar
-    
-    case syncState
-    
-    case pid, category, categoryName
+private var databaseMap = [String : Database]()
+
+private struct BaseColumns {
+    static let id = "id"
+    static let rawData = "raw_data"
 }
 
-enum ColumnType : String {
-    case INTEGER, TEXT
-}
-
-class TableDesc {
+class Table<T : NSObject> {
     
-    var primaryColumn : (name: String, type : ColumnType)?
-    var columns = [(name : String, type : ColumnType)]()
-    var dbName : String?
-    var name : String
+    private var name : String
+    private var dbName : String
+    private var primaryKey : String?
+    private var database : Database?
+    private var normalColumns : [String]?
+    private var columns : [String]?
     
-    init(name : String, primaryKey : Column?, type : ColumnType = .INTEGER) {
+    //primaryKey should be one of the property name, columns should be the sublist of all properties
+    private init(name : String, primaryKey : String?,  dbName : String, columns : [String]? = nil) {
         self.name = name
-        if primaryKey != nil {
-            primaryColumn = (primaryKey!.rawValue, type)
+        self.dbName = dbName
+        self.primaryKey = primaryKey
+        self.columns = columns
+        if self.columns == nil {
+            self.columns = getPropertyList()
         }
     }
     
-    func addColumn(name : Column, type : ColumnType = .TEXT) -> TableDesc {
-        columns.append((name.rawValue, type))
-        return self
+    private func getPropertyList() -> [String] {
+        let t = T()
+        return Mirror(reflecting: t).children.filter { $0.label != nil }.map { $0.label! }
     }
     
-    func columns(names : Column...) -> TableDesc {
-        for name in names {
-            addColumn(name)
-        }
-        return self
-    }
-    
-    
-}
-
-let userTable = TableDesc(name : "user", primaryKey: .userId).columns(.userName, .userAvatar)
-
-func tableWith<T : Serializable>(type : T.Type) -> Table<T> {
-    return Table<T>()
-}
-
-class Table<T : Serializable> {
-    
-    func save<T : Serializable>(obj : T) -> Bool {
-        DB.sharedInstance
-        
-        return true
-    }
-    
-    func saveAll<T : Serializable>(objs : [T]) -> Bool {
-        return true
-    }
-    
-    func query(columnName : Column, value : String) -> [T] {
-        return [T]()
-    }
-    
-    func query(columnName : Column, value : Int) -> [T] {
-        return [T]()
-    }
-    
-    func delete(columnName : Column, value : String) {
-        
-    }
-}
-
-extension Dictionary {
-    func saveToTable(table : TableDesc) {
-        
-    }
-}
-
-protocol Serializable {
-    
-    func toDB() -> (columns : [Column], values : [String])
-    static func fromDB(resultSet: FMResultSet) -> AnyObject
-    static var tableDesc : TableDesc { get }
-    
-}
-
-class Product : NSDictionary, Serializable {
-    
-    func toDB() -> (columns: [Column], values: [String]) {
-        return (columns: [.pid, .category], values : [stringForColumn(.pid), stringForColumn(.category)])
-    }
-    
-    static func fromDB(resultSet: FMResultSet) -> AnyObject {
-        let product = Product()
-        return product
-    }
-    
-    static var tableDesc :  TableDesc {
-        return TableDesc(name : "product", primaryKey: .pid).columns(.category, .userAvatar, .categoryName)
-    }
-    
-    func stringForColumn(column : Column) -> String {
-        if let value = objectForKey(column.rawValue)?.stringRepresentation {
-            return value
-        }else {
-            return ""
-        }
-    }
-    
-}
-
-
-
-extension Serializable {
-    
-    static func nameOf(column : Column) -> String {
-        return column.rawValue
-    }
-    
-}
-
-class User {
-    
-    var id : UInt64?
-    var name : String?
-    var avatar : String?
-    
-}
-
-extension User : Serializable {
-    
-    func toDB() -> (columns: [Column], values: [String]) {
-        return (columns: [.userId, .userName, .userAvatar], values : [])
-    }
-    
-    static func fromDB(resultSet: FMResultSet) -> AnyObject {
-        let user = User()
-        user.id = resultSet.unsignedLongLongIntForColumn(nameOf(.id))
-        user.name = resultSet.stringForColumn(nameOf(.userName))
-        user.avatar = resultSet.stringForColumn(nameOf(.userAvatar))
-        return user
-    }
-    
-    static var tableDesc :  TableDesc {
-        return TableDesc(name : "user", primaryKey: .userId).columns(.userName, .userAvatar)
-    }
-}
-
-class DB: NSObject {
-    
-    static let sharedInstance = DB()
-    var databaseMap = [String : FMDatabase]()
-    
-    let databaseDescs = ["Default" : [User.tableDesc], "Other" : [Product.tableDesc]]
-    
-    var initSuccess = true
-    
-    override init() {
-        super.init()
-        for (databaseName, tables) in databaseDescs {
-            if let database = tablesInit(databaseName, tables: tables) {
-                databaseMap[databaseName] = database
-            }else {
-                initSuccess = false
-            }
-        }
-    }
-    
-    func setUp() -> Bool{
-        if initSuccess {
-            return initSuccess
-        }
-        initSuccess = true
-        for (databaseName, tables) in databaseDescs {
-            if databaseMap[databaseName] == nil {
-                if let database = tablesInit(databaseName, tables: tables) {
-                    databaseMap[databaseName] = database
+    private func setupDatabase() -> Bool {
+        if database == nil {
+            if let db = databaseMap[dbName] {
+                let setupSuccess = db.setupTable(name, primaryKey: primaryKey, columns: getNormalColumns())
+                if setupSuccess {
+                    database = db
                 }else {
-                    initSuccess = false
+                    return false
+                }
+            }else {
+                let database = Database(name: dbName)
+                let setupSuccess = database.setupTable(name, primaryKey: primaryKey, columns: getNormalColumns())
+                if setupSuccess {
+                    self.database = database
+                    databaseMap[dbName] = database
+                }else {
+                    return false
                 }
             }
         }
-        return initSuccess
+        return true
     }
     
-    func tablesInit(databaseName : String, tables : [TableDesc]) -> FMDatabase? {
-        // open db
+    func getNormalColumns() -> [String] {
+        if normalColumns == nil {
+            normalColumns = self.columns!.filter( { $0 != primaryKey} )
+        }
+        return normalColumns!
+    }
+    
+    func save(obj : T) -> Bool {
+        if !setupDatabase() { return false }
+        return database!.insert(name, columns: columns!, values: convertObjToValue(obj))
+    }
+    
+    func convertObjToValue(obj : T) -> [AnyObject?] {
+        return columns!.map { obj.valueForKey($0) }
+    }
+    
+    func saveAll(objs : [T]) -> Bool {
+        if !setupDatabase() { return false }
+        
+        return database!.bulkInsert(name, columns: columns!, valuesList: objs.map({ (obj : T) -> [AnyObject?] in
+            return convertObjToValue(obj)
+        }))
+    }
+    
+    func query(columnNames : [String], values : [AnyObject?]) -> [T] {
+        if !setupDatabase() { return [] }
+        var array = [T]()
+        if let rs = database!.query(name, columns: columnNames, values: values) {
+            while rs.next() {
+                if let t = parseResultSetToObj(rs) {
+                    array.append(t)
+                }
+            }
+        }
+        return array
+    }
+    
+    func querySingle(columnNames : [String], values : [AnyObject?]) -> T? {
+        if !setupDatabase() { return nil }
+        if let rs = database!.query(name, columns: columnNames, values: values) {
+            while rs.next() {
+                return parseResultSetToObj(rs)
+            }
+        }
+        return nil
+    }
+    
+    func parseResultSetToObj(resultSet : FMResultSet) -> T? {
+        let obj = T()
+        for key in columns! {
+            let value = resultSet.objectForColumnName(key)
+            if !(value is NSNull) {
+                obj.setValue(value, forKey: key)
+            }
+        }
+        return obj
+    }
+    
+    func queryAll() -> [T] {
+        if !setupDatabase() { return [] }
+        var array = [T]()
+        if let rs = database!.query(name, columns: nil, values: nil) {
+            while rs.next() {
+                if let t = parseResultSetToObj(rs) {
+                    array.append(t)
+                }
+            }
+        }
+        return array
+    }
+    
+    func delete(columnNames : [String], values : [AnyObject?]) -> Bool {
+        if !setupDatabase() { return false }
+        return database!.delete(name, columns: columnNames, values: values)
+    }
+    
+    func deleteAll() -> Bool {
+        if !setupDatabase() { return false }
+        return database!.delete(name, columns: nil, values: nil)
+    }
+}
+
+//class CommonTable : Table<NSDictionary> {
+//
+//    init(name: String, primaryKey: String, dbName: String) {
+//        super.init(name: name, primaryKey: primaryKey, dbName: dbName)
+//    }
+//
+//    override func getAllColumns() -> [String] {
+//        return [primaryKey!, BaseColumns.rawData]
+//    }
+//
+//    override func getNormalColumns() -> [String] {
+//        return [BaseColumns.rawData]
+//    }
+//
+//    override func convertObjToValue(obj: NSDictionary) -> [AnyObject?] {
+//        do {
+//            let data : AnyObject = try NSJSONSerialization.dataWithJSONObject(obj, options: .PrettyPrinted)
+//            return [data]
+//        }catch {
+//            return [NSNull()]
+//        }
+//    }
+//
+//    override func parseResultSetToObj(resultSet: FMResultSet) -> NSDictionary? {
+//        do {
+//            return try NSJSONSerialization.JSONObjectWithData(resultSet.dataForColumn(BaseColumns.rawData), options: .AllowFragments) as? NSDictionary
+//        } catch {
+//            return nil
+//        }
+//    }
+//
+//    func queryById(id : String) -> NSDictionary? {
+//        return querySingle([primaryKey!], values: [id])
+//    }
+//}
+
+func TableWith<T : NSObject>(tableName : String?, type : T.Type, primaryKey : String?, dbName : String = "Default") -> Table<T> {
+    return Table<T>(name: (tableName == nil ? NSStringFromClass(T):tableName!), primaryKey : primaryKey, dbName : dbName)
+}
+
+func TableWith<T : NSObject>(tableName : String?, type : T.Type, primaryKey : String?, dbName : String = "Default", columns : [String]? = nil) -> Table<T> {
+    return Table<T>(name: (tableName == nil ? NSStringFromClass(T):tableName!), primaryKey : primaryKey, dbName : dbName, columns : columns)
+}
+
+//func tableWithName(name : String, primaryKey : String, dbName : String = "Default") -> CommonTable {
+//    return CommonTable(name: name, primaryKey : primaryKey, dbName: dbName)
+//}
+
+private class Database : NSObject {
+    
+    var fmDatabase : FMDatabase
+    
+    init(name : String) {
         let fileManager = NSFileManager.defaultManager()
         let documents = try! fileManager.URLForDirectory(.DocumentDirectory, inDomain: .UserDomainMask, appropriateForURL: nil, create: false)
-        let fileURL = documents.URLByAppendingPathComponent("test.sqlite")
-        let databaseExist = fileManager.fileExistsAtPath(fileURL.path!)
-        let database = FMDatabase(path: fileURL.path)
-        if !database.open() {
+        let fileURL = documents.URLByAppendingPathComponent(name + ".db")
+        fmDatabase = FMDatabase(path: fileURL.path)
+        if !fmDatabase.open() {
             print("Unable to open database")
-            database.close()
+            fmDatabase.close()
             if let path = fileURL.path {
                 do {
                     try fileManager.removeItemAtPath(path)
@@ -214,39 +213,23 @@ class DB: NSObject {
                     print("Unable to delete database")
                 }
             }
-            return nil
         }
-        if !databaseExist {
-            for table in tables {
-                createTable(database, table: table)
-                table.dbName = databaseName
-            }
-            
-        }else{
-            // 0. query current existed table
-            // 1. create if not exist
-            // 2. query exist table schemas & compare, if not the same, add column
-            // 3. init success
-            var success = true
-            for table in tables {
-                if let existingColumns = getExistingColumnsOfTable(database, tableName: table.name) {
-                    success = updateTableStructure(database, table: table, originColumnNames: existingColumns)
-                }else {
-                    success = createTable(database, table: table)
-                }
-                table.dbName = databaseName
-            }
-            if !success {
-                database.close()
-                return nil
-            }
-        }
-        
-        return database
     }
     
-    func getExistingColumnsOfTable(database : FMDatabase, tableName : String) -> Set<String>? {
-        let rs = database.executeQuery("PRAGMA table_info(\(tableName))", withArgumentsInArray: nil)
+    func setupTable(name : String, primaryKey : String?, columns : [String]) -> Bool {
+        if fmDatabase.open() && columns.count > 0 {
+            if let existingColumns = getExistingColumnsOfTable(name) {
+                return updateTableStructure(name ,columns: columns, originColumnNames: existingColumns)
+            }else {
+                return createTable(name, primaryKey: primaryKey, columns: columns)
+            }
+        }else {
+            return false
+        }
+    }
+    
+    func getExistingColumnsOfTable(tableName : String) -> Set<String>? {
+        let rs = fmDatabase.executeQuery("PRAGMA table_info(\(tableName))", withArgumentsInArray: nil)
         var result = Set<String>()
         while rs.next() {
             if let columnName = rs.stringForColumn("name") {
@@ -256,26 +239,11 @@ class DB: NSObject {
         return result.count > 0 ? result : nil
     }
     
-    func createTable(database : FMDatabase, table : TableDesc) -> Bool {
-        var sql = "create table " + table.name + "("
-        if let primaryColumn =  table.primaryColumn {
-            sql += primaryColumn.name + " " + primaryColumn.type.rawValue + " primary key"
-        }else {
-            sql += "id " + ColumnType.INTEGER.rawValue + " primary key" + "autoincrement"
-        }
-        for column in table.columns {
-            sql += ", " + column.name + " " + column.type.rawValue
-        }
-        sql += ")"
-        return database.executeUpdate(sql, withArgumentsInArray: nil)
-    }
-    
-    func updateTableStructure(database : FMDatabase, table : TableDesc, originColumnNames : Set<String>) -> Bool{
-        //ALTER TABLE {tableName} ADD COLUMN COLNew {type};
-        var columnsNeedToAdd = [(name : String, type : ColumnType)]()
+    func updateTableStructure(tableName : String, columns : [String], originColumnNames : Set<String>) -> Bool{
+        var columnsNeedToAdd = [String]()
         var result = true
-        for column in table.columns {
-            if !originColumnNames.contains(column.name) {
+        for column in columns {
+            if !originColumnNames.contains(column) {
                 columnsNeedToAdd.append(column)
             }
         }
@@ -284,35 +252,119 @@ class DB: NSObject {
         }
         
         for column in columnsNeedToAdd {
-            let sql = "alter table " + table.name + " add column " + column.name + " " + column.type.rawValue
-            result = database.executeUpdate(sql, withArgumentsInArray: nil)
+            let sql = "alter table " + tableName + " add column " + column + " TEXT"
+            result = fmDatabase.executeUpdate(sql, withArgumentsInArray: nil)
         }
         
         return result
     }
     
-    func insert(table : TableDesc, columns : [String], values : [String]) -> Bool {
-        if setUp() {
-            if let database = databaseMap[table.name] {
-                //            columns.
-                
-                //            database.executeUpdate("insert into test (x, y, z) values (?, ?, ?)", values: ["a", "b", "c"])
+    
+    func createTable(tableName : String, primaryKey : String?, columns : [String]) -> Bool {
+        var sql = "create table " + tableName + "("
+        if let primaryColumn = primaryKey {
+            sql += primaryColumn + " TEXT primary key"
+        }else {
+            sql += "id INTEGER primary key autoincrement"
+        }
+        for column in columns {
+            sql += ", " + column + " TEXT"
+        }
+        sql += ")"
+        return fmDatabase.executeUpdate(sql, withArgumentsInArray: nil)
+    }
+    
+    func insert(tableName : String, columns : [String], values : [AnyObject?]) -> Bool {
+        return insertWithPreparedSql(prepareSqlForInsertColumns(tableName, columns: columns), valueCount: columns.count, values: values)
+    }
+    
+    private func insertWithPreparedSql(sql : String, valueCount : Int,  values : [AnyObject?]) -> Bool {
+        if valueCount == 0 || valueCount != values.count {
+            return false
+        }
+        return fmDatabase.executeUpdate(sql, withArgumentsInArray: convertNullObjects(valueCount, values: values))
+    }
+    
+    private func convertNullObjects(count : Int, values : [AnyObject?]) -> [AnyObject] {
+        var objects = [AnyObject]()
+        for i in 0..<count {
+            if values[i] == nil {
+                objects.append(NSNull())
+            }else {
+                objects.append(values[i]!)
             }
         }
-        
-        return false
+        return objects
     }
     
-    func bulkInsert() {
-        
-    }
-    
-    func queryAll(table : TableDesc) -> FMResultSet? {
-        if setUp() {
-            if let database = databaseMap[table.name] {
-                return database.executeQuery("select * from " + table.name, withArgumentsInArray: nil)
+    func prepareSqlForInsertColumns(tableName : String, columns : [String]) -> String {
+        var combineColumnString = ""
+        var questioMarks = ""
+        for i in 0..<columns.count {
+            if i == 0 {
+                combineColumnString += columns[0]
+                questioMarks += "?"
+            }else {
+                combineColumnString += "," + columns[i]
+                questioMarks += ",?"
             }
+        }
+        return "insert or replace into " + tableName + "(" + combineColumnString + ") values(" + questioMarks + ")";
+    }
+    
+    func bulkInsert(tableName : String, columns : [String], valuesList : [[AnyObject?]]) -> Bool {
+        fmDatabase.beginTransaction()
+        var success = true
+        let sql = prepareSqlForInsertColumns(tableName, columns: columns)
+        for values in valuesList {
+            if !insertWithPreparedSql(sql, valueCount: columns.count, values: values) {
+                success = false
+                break
+            }
+        }
+        if !success {
+            fmDatabase.rollback()
+        }else {
+            fmDatabase.commit()
+        }
+        return success
+    }
+    
+    func query(tableName : String, columns : [String]?, values : [AnyObject?]?) -> FMResultSet? {
+        if columns == nil || columns?.count == 0 {
+            return fmDatabase.executeQuery("select * from " + tableName, withArgumentsInArray: nil)
+        }else if columns?.count == values?.count {
+            var condition = " where "
+            var i = 0
+            for column in columns! {
+                if i == 0 {
+                    condition += column + "=?"
+                }else {
+                    condition += "and " + column + "=? "
+                }
+                i++
+            }
+            return fmDatabase.executeQuery("select * from " + tableName + condition, withArgumentsInArray: convertNullObjects(columns!.count, values: values!))
         }
         return nil
     }
- }
+    
+    func delete(tableName : String, columns : [String]?, values : [AnyObject?]?) -> Bool {
+        if columns == nil || columns?.count == 0 {
+            return fmDatabase.executeUpdate("delete from " + tableName, withArgumentsInArray: nil)
+        }else if columns?.count == values?.count {
+            var condition = " where "
+            var i = 0
+            for column in columns! {
+                if i == 0 {
+                    condition += column + "=?"
+                }else {
+                    condition += "and " + column + "=? "
+                }
+                i++
+            }
+            return fmDatabase.executeUpdate("delete from " + tableName + condition, withArgumentsInArray: convertNullObjects(columns!.count, values: values!))
+        }
+        return false
+    }
+}

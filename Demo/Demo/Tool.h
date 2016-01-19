@@ -10,4 +10,9 @@
 
 @interface Tool : NSObject
 
++(void)test;
+
++(NSDictionary *) dictionaryWithPropertiesOfObject:(id)obj;
+
+
 @end
